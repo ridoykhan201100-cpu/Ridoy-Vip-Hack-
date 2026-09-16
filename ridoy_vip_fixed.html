@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ridoy VIP History</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#070a14;color:#fff;font-family:Arial,sans-serif;padding:12px}
+.box{max-width:430px;margin:auto;background:#10162a;border:1px solid #00ff88;border-radius:22px;padding:18px}
+h1{text-align:center;margin:0 0 12px}h1 span{color:#00ff88}
+.login{position:fixed;inset:0;background:#000e;display:grid;place-items:center;z-index:5}
+.card{width:90%;max-width:340px;background:#12182b;border:2px solid #00ff88;border-radius:18px;padding:24px;text-align:center}
+input,button{width:100%;padding:13px;border-radius:10px;margin-top:10px}
+input{background:#080c18;color:#fff;border:1px solid #333}button{border:0;background:#00ff88;font-weight:bold}
+.status{margin:12px 0;padding:10px;border-radius:10px;background:#0a1020;text-align:center}
+iframe{width:100%;height:350px;border:1px solid #26304a;border-radius:14px;background:#000}
+table{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
+th,td{padding:7px 3px;border-bottom:1px solid #20263a;text-align:left}th{color:#00ff88}
+.error{color:#ff405f}.ok{color:#00ff88}
+</style>
+</head>
+<body>
+<div id="gate" class="login"><div class="card">
+<h2 style="color:#00ff88">RIDOY</h2><p>Secure Access</p>
+<input id="pw" type="password" placeholder="Password">
+<button onclick="unlock()">UNLOCK</button>
+<p id="err" class="error"></p>
+</div></div>
+
+<div class="box">
+<h1>RIDOY <span>VIP HISTORY</span></h1>
+<div id="status" class="status">Login করুন</div>
+<iframe src="https://hgnice.bet/#/register?invitationCode=454112177607"
+        title="Game"></iframe>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+<b>Recent 10 Results</b><button style="width:auto;padding:7px 10px;margin:0" onclick="loadHistory()">Refresh</button>
+</div>
+<table><thead><tr><th>Period</th><th>Number</th><th>Size</th><th>Color</th></tr></thead>
+<tbody id="rows"><tr><td colspan="4">Waiting...</td></tr></tbody></table>
+<p style="font-size:10px;color:#777;text-align:center">History/statistics only. No guaranteed prediction.</p>
+</div>
+
+<script>
+const PASSWORD="Hm";
+const API="https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
+
+function unlock(){
+  if(document.getElementById("pw").value===PASSWORD){
+    document.getElementById("gate").style.display="none";
+    loadHistory();
+    setInterval(loadHistory,10000);
+  }else document.getElementById("err").textContent="Password ভুল!";
+}
+
+async function loadHistory(){
+  const s=document.getElementById("status");
+  s.textContent="API থেকে data নেওয়া হচ্ছে...";
+  s.className="status";
+  try{
+    const r=await fetch(API+"?pageNo=1&pageSize=10&_="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    const list=j?.data?.list || (Array.isArray(j?.data)?j.data:[]) || [];
+    if(!list.length) throw new Error("No results");
+    render(list.slice(0,10));
+    s.textContent="● LIVE — API connected";
+    s.className="status ok";
+  }catch(e){
+    s.textContent="API load হয়নি — Browser/CORS বা server block করতে পারে";
+    s.className="status error";
+    document.getElementById("rows").innerHTML=
+      '<tr><td colspan="4" class="error">Live API unavailable</td></tr>';
+    console.error(e);
+  }
+}
+function render(list){
+  const rows=document.getElementById("rows");rows.innerHTML="";
+  list.forEach(x=>{
+    const raw=x.number??x.openNumber??x.result??"-";
+    const m=String(raw).match(/[0-9]/),n=m?Number(m[0]):null;
+    const p=x.issueNumber??x.issue??x.period??"-";
+    const size=n===null?"-":n>=5?"BIG":"SMALL";
+    let color=n===null?"-":(n===0||n===5)?"VIOLET":n%2===0?"GREEN":"RED";
+    const tr=document.createElement("tr");
+    tr.innerHTML="<td>"+esc(p)+"</td><td>"+(n??"-")+"</td><td>"+size+"</td><td>"+color+"</td>";
+    rows.appendChild(tr);
+  });
+}
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
+</script>
+</body>
+</html>
